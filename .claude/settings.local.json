@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 *)",
+      "WebSearch",
+      "WebFetch(domain:unsplash.com)",
+      "WebFetch(domain:picsum.photos)",
+      "Bash(curl -sI \"https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg\")",
+      "Bash(curl -sI http://localhost:8000)",
+      "Bash(curl *)",
+      "Bash(pkill -f \"python3.*server.py\")",
+      "Bash(pkill -f \"python3.*8000\")",
+      "Bash(nohup python3 server.py)",
+      "Bash(disown)",
+      "Bash(xdg-open /home/laamiyyah/MyProjects/VSCode/calculator/index.html)",
+      "Bash(xdg-open http://localhost:8000)",
+      "Bash(xdg-open http://localhost:8001)",
+      "Bash(lsof -ti:8000)",
+      "WebFetch(domain:fabrista.ru)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:pypi.org)",
+      "Bash(pip show *)",
+      "Bash(pip index *)",
+      "Bash(xargs -r kill)",
+      "Bash(node --check /home/laamiyyah/MyProjects/VSCode/fab_menu/script.js)",
+      "Bash(echo \"OK $\\(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000\\)\")",
+      "Bash(ip -4 addr show)",
+      "Bash(sudo ufw status)",
+      "Bash(sudo iptables -L INPUT -n --line-numbers)",
+      "Bash(ip route *)",
+      "Bash(sudo nft list ruleset)",
+      "Bash(sudo firewall-cmd --list-all)",
+      "Bash(ssh -o StrictHostKeyChecking=no -R 80:localhost:8000 serveo.net)",
+      "Bash(pkill -f \"python3 server.py\")",
+      "Bash(pkill -f \"serveo.net\")"
+    ]
+  }
+}
