@@ -95,9 +95,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const h = new Date().getHours();
         let greeting;
         if (h >= 6 && h < 12) greeting = '☀️ Доброе утро';
-        else if (h >= 12 && h < 17) greeting = '🌤 Приятного дня';
+        else if (h >= 12 && h < 17) greeting = '🌤 Добрый день';
         else if (h >= 17 && h < 22) greeting = '🌙 Добрый вечер';
-        else greeting = '✨ Сладких снов';
+        else greeting = '✨ Доброй ночи';
         const el = document.querySelector('.header__subtitle');
         if (el) el.textContent = greeting;
     }
