@@ -16,7 +16,7 @@
             <div class="header__inner">
                 <a href="#" class="header__logo">
                     <img src="https://static.tildacdn.com/tild3836-6261-4130-a465-656331646636/photo.svg" alt="Fabrista" class="header__logo-img">
-                    <span class="header__logo-text">fabrista</span>
+                    <span class="header__logo-text"></span>
                 </a>
                 <p class="header__subtitle">меню</p>
             </div>
@@ -83,6 +83,17 @@
             </div>
             <div class="cart-modal-body" id="cart-modal-body">
                 <p class="cart-modal-empty">Корзина пуста</p>
+            </div>
+            <div class="cart-modal-checkout" id="cart-modal-checkout" style="display:none">
+                <div class="checkout-field">
+                    <label class="checkout-label" for="checkout-name">Имя <span class="required-star">*</span></label>
+                    <input type="text" id="checkout-name" class="checkout-input" placeholder="Как к вам обращаться?" required autocomplete="name">
+                    <span class="checkout-error-msg" id="checkout-name-err">Пожалуйста, укажите ваше имя</span>
+                </div>
+                <div class="checkout-field">
+                    <label class="checkout-label" for="checkout-comment">Комментарий к заказу</label>
+                    <textarea id="checkout-comment" class="checkout-textarea" placeholder="Пожелания по составу, аллергии, впечатления..." rows="2"></textarea>
+                </div>
             </div>
             <div class="cart-modal-footer" id="cart-modal-footer" style="display:none">
                 <div class="cart-modal-total-row">

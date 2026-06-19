@@ -220,6 +220,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cartModalFooter = document.getElementById('cart-modal-footer');
     const cartModalTotal = document.getElementById('cart-modal-total');
     const cartModalClose = document.getElementById('cart-modal-close');
+    const cartModalCheckout = document.getElementById('cart-modal-checkout');
+    const checkoutName = document.getElementById('checkout-name');
+    const checkoutComment = document.getElementById('checkout-comment');
 
     function updateCartUI() {
         const count = getCartCount();
@@ -238,10 +241,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (count === 0) {
             cartModalBody.innerHTML = '<p class="cart-modal-empty">Корзина пуста</p>';
             cartModalFooter.style.display = 'none';
+            cartModalCheckout.style.display = 'none';
             return;
         }
 
         cartModalFooter.style.display = 'block';
+        cartModalCheckout.style.display = 'block';
+
+        // Сбрасываем ошибку валидации при перерисовке
+        checkoutName.classList.remove('checkout-input--error');
+        document.getElementById('checkout-name-err').style.display = 'none';
 
         cart.forEach(ci => {
             const row = document.createElement('div');
@@ -333,10 +342,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     cartModalClose.addEventListener('click', closeCartModal);
 
     document.getElementById('cart-checkout-btn').addEventListener('click', () => {
-        cart = [];
-        updateCartUI();
-        closeCartModal();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const name = checkoutName.value.trim();
+        const errEl = document.getElementById('checkout-name-err');
+
+        // Валидация имени
+        if (!name) {
+            checkoutName.classList.add('checkout-input--error');
+            errEl.style.display = 'block';
+            checkoutName.focus();
+            return;
+        }
+        checkoutName.classList.remove('checkout-input--error');
+        errEl.style.display = 'none';
+
+        const comment = checkoutComment.value.trim();
+        const total = formatPrice(getCartTotal());
+
+        // Собираем детали заказа
+        const orderItems = cart.map(ci => {
+            let parts = [ci.name];
+            if (ci.size) parts.push(ci.size);
+            ci.addons.forEach(a => parts.push(a.label));
+            if (ci.quantity > 1) parts.push('×' + ci.quantity);
+            return parts.join(' · ');
+        }).join('\n');
+
+        console.log('📋 Новый заказ:');
+        console.log('Имя:', name);
+        console.log('Комментарий:', comment || '—');
+        console.log('Состав:\n' + orderItems);
+        console.log('Итого:', total);
+
+        // Показываем success-экран внутри модалки
+        const successDiv = document.createElement('div');
+        successDiv.className = 'order-success';
+        successDiv.innerHTML = `
+            <div class="order-success__icon">✓</div>
+            <div class="order-success__title">Спасибо, ${name}!</div>
+            <div class="order-success__subtitle">Заказ принят. Мы уже готовим для вас.</div>
+            <button class="order-success__btn" id="order-success-close">Отлично</button>
+        `;
+        cartModal.querySelector('.modal-card').appendChild(successDiv);
+
+        successDiv.querySelector('#order-success-close').addEventListener('click', () => {
+            cart = [];
+            updateCartUI();
+            closeCartModal();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
     });
 
     cartModal.addEventListener('click', e => {
@@ -346,6 +399,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     function closeCartModal() {
         cartModal.classList.remove('modal-overlay--open');
         document.body.style.overflow = '';
+        // Скрываем и сбрасываем форму оформления
+        cartModalCheckout.style.display = 'none';
+        checkoutName.value = '';
+        checkoutComment.value = '';
+        checkoutName.classList.remove('checkout-input--error');
+        const errEl = document.getElementById('checkout-name-err');
+        if (errEl) errEl.style.display = 'none';
+        // Убираем success-экран, если был
+        const existingSuccess = document.querySelector('.order-success');
+        if (existingSuccess) existingSuccess.remove();
     }
 
     // Единый обработчик Escape

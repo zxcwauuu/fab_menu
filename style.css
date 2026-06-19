@@ -77,13 +77,12 @@ button:focus-visible {
 
 .header__logo {
     display: flex;
-    align-items: center;
     gap: 10px;
 }
 
 .header__logo-img {
-    width: 52px;
-    height: 52px;
+    width: 120px;
+    height: 120px;
 }
 
 .header__logo-text {
@@ -1330,6 +1329,188 @@ button:focus-visible {
     .add-to-cart {
         font-size: 14px;
         padding: 12px 16px;
+    }
+}
+
+/* ========== CHECKOUT FORM ========== */
+.cart-modal-checkout {
+    padding: 16px 28px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    flex-shrink: 0;
+    background: #fff;
+}
+
+.checkout-field {
+    margin-bottom: 12px;
+}
+
+.checkout-field:last-child {
+    margin-bottom: 0;
+}
+
+.checkout-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #3d162f;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    opacity: 0.6;
+}
+
+.required-star {
+    color: #f16138;
+    margin-left: 1px;
+}
+
+.checkout-input,
+.checkout-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid rgba(61, 22, 47, 0.1);
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #2d2d2d;
+    background: #fffcf5;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.checkout-input::placeholder,
+.checkout-textarea::placeholder {
+    color: #ccc;
+}
+
+.checkout-input:focus,
+.checkout-textarea:focus {
+    border-color: #f16138;
+    box-shadow: 0 0 0 3px rgba(241, 97, 56, 0.1);
+    background: #fff;
+}
+
+.checkout-input--error {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+.checkout-textarea {
+    resize: none;
+    line-height: 1.5;
+}
+
+.checkout-error-msg {
+    font-size: 11px;
+    color: #e74c3c;
+    margin-top: 4px;
+    display: none;
+}
+
+.checkout-error-msg--visible {
+    display: block;
+}
+
+/* ========== ORDER SUCCESS OVERLAY ========== */
+.order-success {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 28px;
+    text-align: center;
+    z-index: 20;
+    animation: orderSuccessIn 0.4s ease both;
+}
+
+@keyframes orderSuccessIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.order-success__icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f16138, #d94d2a);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 16px;
+    box-shadow: 0 6px 20px rgba(241, 97, 56, 0.3);
+}
+
+.order-success__title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #3d162f;
+    margin-bottom: 8px;
+}
+
+.order-success__subtitle {
+    font-size: 14px;
+    color: #888;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.order-success__btn {
+    padding: 10px 32px;
+    border: none;
+    border-radius: 100px;
+    background: linear-gradient(135deg, #f16138, #d94d2a);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 14px rgba(241, 97, 56, 0.25);
+}
+
+@media (hover: hover) {
+    .order-success__btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(241, 97, 56, 0.35);
+    }
+}
+
+.order-success__btn:active {
+    transform: scale(0.97);
+}
+
+/* ========== RESPONSIVE CHECKOUT ========== */
+@media (max-width: 480px) {
+    .cart-modal-checkout {
+        padding: 12px 20px;
+    }
+
+    .checkout-input,
+    .checkout-textarea {
+        padding: 9px 12px;
+        font-size: 13px;
+    }
+
+    .order-success__title {
+        font-size: 19px;
+    }
+
+    .order-success__subtitle {
+        font-size: 13px;
     }
 }
 
