@@ -2,15 +2,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ====== ЗАГРУЗКА ДАННЫХ ======
     let menuData, addonsData;
 
-    try {
-        const res = await fetch('menu.json');
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
+    let contentData;
 
-        addonsData = json.addons || {};
+    try {
+        const [menuRes, contentRes] = await Promise.all([
+            fetch('menu.json'),
+            fetch('content.json')
+        ]);
+        if (!menuRes.ok) throw new Error(`menu.json HTTP ${menuRes.status}`);
+        if (!contentRes.ok) throw new Error(`content.json HTTP ${contentRes.status}`);
+
+        const json = await menuRes.json();
+        contentData = await contentRes.json();
+
+        addonsData = contentData.addons || {};
         menuData = {};
-        // Все ключи, кроме tabs, addons, badges — это секции меню
-        const metaKeys = ['tabs', 'addons', 'badges'];
+
+        // Все ключи, кроме tabs — это секции меню
+        const metaKeys = ['tabs'];
         for (const key of Object.keys(json)) {
             if (!metaKeys.includes(key)) {
                 menuData[key] = json[key];
@@ -18,9 +27,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         // Сохраняем мета-данные для рендера
         menuData.tabs = json.tabs || [];
-        menuData.badges = json.badges || {};
+
+        // Сливаем описания и бейджи из content.json в каждый товар
+        const contentItems = contentData.items || {};
+        menuData.badges = contentData.badges || {};
+
+        for (const sectionKey of Object.keys(menuData)) {
+            if (sectionKey === 'tabs') continue;
+            const categories = menuData[sectionKey];
+            if (!Array.isArray(categories)) continue;
+            for (const cat of categories) {
+                if (!cat.items) continue;
+                for (const item of cat.items) {
+                    const content = contentItems[item.name] || {};
+
+                    // Описания и бейдж — из content.json
+                    if (content.desc !== undefined) item.desc = content.desc;
+                    if (content.detailed !== undefined) item.detailed = content.detailed;
+                    if (content.badge) item.badge = content.badge;
+
+                    // priceDisplay — выводим из первого размера, если не задан
+                    if (!item.priceDisplay && item.sizes && item.sizes.length > 0) {
+                        item.priceDisplay = item.sizes[0];
+                    }
+                }
+            }
+        }
     } catch (err) {
-        console.error('Не удалось загрузить menu.json:', err);
+        console.error('Не удалось загрузить данные:', err);
         document.querySelectorAll('.menu__content').forEach(el => {
             el.innerHTML = '<p style="text-align:center;padding:60px 0;color:#999;">Не удалось загрузить меню. Попробуйте обновить страницу.</p>';
         });
@@ -54,6 +88,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     function getItemImage(itemName) {
         return itemImages[itemName] || '';
     }
+
+
+    // ====== TIME-BASED GREETING ======
+    function setTimeGreeting() {
+        const h = new Date().getHours();
+        let greeting;
+        if (h >= 6 && h < 12) greeting = '☀️ Доброе утро';
+        else if (h >= 12 && h < 17) greeting = '🌤 Приятного дня';
+        else if (h >= 17 && h < 22) greeting = '🌙 Добрый вечер';
+        else greeting = '✨ Сладких снов';
+        const el = document.querySelector('.header__subtitle');
+        if (el) el.textContent = greeting;
+    }
+    setTimeGreeting();
 
 
     // ====== ХЕЛПЕРЫ ======
@@ -128,6 +176,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         fab.classList.remove('cart-fab--bounce');
         void fab.offsetHeight;
         fab.classList.add('cart-fab--bounce');
+
+        // Анимация карточки товара
+        const cards = document.querySelectorAll('.menu__item');
+        const card = Array.from(cards).find(el => el.dataset.name === item.name);
+        if (card) {
+            card.classList.remove('menu__item--added');
+            void card.offsetHeight;
+            card.classList.add('menu__item--added');
+            setTimeout(() => card.classList.remove('menu__item--added'), 800);
+        }
     }
 
     function removeFromCart(id) {
@@ -341,6 +399,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             let cls = 'menu__item';
             if (hasImage) cls += ' menu__item--has-image';
             el.className = cls;
+            el.dataset.name = item.name;
 
             // Изображение
             if (hasImage) {
