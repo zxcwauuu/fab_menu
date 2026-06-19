@@ -37,7 +37,11 @@
       "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('/home/laamiyyah/MyProjects/VSCode/fab_menu/menu.json','utf8'\\)\\); console.log\\('menu.json: OK'\\)\")",
       "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('/home/laamiyyah/MyProjects/VSCode/fab_menu/content.json','utf8'\\)\\); console.log\\('content.json: OK'\\)\")",
       "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const j=JSON.parse\\(d\\); console.log\\('addons keys:', Object.keys\\(j.addons\\).length\\); console.log\\('sections:', JSON.stringify\\(Object.keys\\(j\\).filter\\(k=>!['addons','tabs'].includes\\(k\\)\\)\\)\\); console.log\\('tabs:', j.tabs.length\\); j.bar.forEach\\(c=>c.items.forEach\\(i=>console.log\\('  bar:', i.name, '| sizes:', !!i.sizes, '| addons:', i.addons?.length, '| desc:', 'desc' in i, '| detailed:', 'detailed' in i, '| badge:', 'badge' in i\\)\\)\\); j.kitchen.forEach\\(c=>c.items.forEach\\(i=>console.log\\('  kitchen:', i.name, '| priceDisplay:', i.priceDisplay, '| desc:', 'desc' in i, '| badge:', 'badge' in i\\)\\)\\)\")",
-      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const j=JSON.parse\\(d\\); console.log\\('badges:', Object.keys\\(j.badges\\)\\); console.log\\('items:', Object.keys\\(j.items\\).length\\); console.log\\('Латте badge:', j.items['Латте'].badge\\); console.log\\('Эспрессо desc:', j.items['Эспрессо'].desc.substring\\(0,50\\)\\)\")"
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const j=JSON.parse\\(d\\); console.log\\('badges:', Object.keys\\(j.badges\\)\\); console.log\\('items:', Object.keys\\(j.items\\).length\\); console.log\\('Латте badge:', j.items['Латте'].badge\\); console.log\\('Эспрессо desc:', j.items['Эспрессо'].desc.substring\\(0,50\\)\\)\")",
+      "WebFetch(domain:localhost)",
+      "Bash(node -e \"try { require\\('fs'\\).readFileSync\\('script.js','utf8'\\); } catch\\(e\\){}; const acorn = require\\('acorn'\\);\")",
+      "Bash(node -e ' *)",
+      "Bash(node *)"
     ]
   }
 }

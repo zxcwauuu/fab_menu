@@ -215,6 +215,112 @@ button:focus-visible {
     display: block;
 }
 
+/* ========== LOADING SKELETON ========== */
+.menu__loading {
+    padding: 8px 0 20px;
+}
+
+.menu__loading--done {
+    display: none;
+}
+
+.menu__loading-category {
+    width: 160px;
+    height: 26px;
+    border-radius: 6px;
+    margin-bottom: 24px;
+    background: linear-gradient(90deg,
+        rgba(241, 97, 56, 0.04) 25%,
+        rgba(241, 97, 56, 0.1) 50%,
+        rgba(241, 97, 56, 0.04) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+.menu__loading-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.menu__loading-card {
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.55);
+    overflow: hidden;
+}
+
+.menu__loading-img {
+    height: 180px;
+    background: linear-gradient(90deg,
+        rgba(241, 97, 56, 0.04) 25%,
+        rgba(241, 97, 56, 0.1) 50%,
+        rgba(241, 97, 56, 0.04) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+.menu__loading-body {
+    padding: 16px 18px 18px;
+}
+
+.menu__loading-line {
+    height: 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    background: linear-gradient(90deg,
+        rgba(241, 97, 56, 0.04) 25%,
+        rgba(241, 97, 56, 0.1) 50%,
+        rgba(241, 97, 56, 0.04) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+.menu__loading-line--title {
+    width: 65%;
+    height: 16px;
+}
+
+.menu__loading-line--price {
+    width: 35%;
+    height: 14px;
+    margin-bottom: 0;
+}
+
+@keyframes skeletonShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@media (max-width: 640px) {
+    .menu__loading-grid {
+        gap: 12px;
+    }
+    .menu__loading-img {
+        height: 140px;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu__loading-grid {
+        gap: 10px;
+    }
+    .menu__loading-img {
+        height: 120px;
+    }
+    .menu__loading-body {
+        padding: 12px 14px 14px;
+    }
+    .menu__loading-line--title {
+        height: 14px;
+    }
+    .menu__loading-line {
+        height: 10px;
+    }
+}
+
 /* ========== CATEGORY ========== */
 .menu__category {
     margin-bottom: 40px;
@@ -661,6 +767,13 @@ button:focus-visible {
     border-top: none;
     padding-top: 0;
     margin-top: 0;
+}
+
+/* Секция с количеством — отбита визуально */
+.modal-section--quantity {
+    border-top: 1px solid rgba(61, 22, 47, 0.08);
+    padding-top: 20px;
+    margin-top: 20px;
 }
 
 .modal-section__label {

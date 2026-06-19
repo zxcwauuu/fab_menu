@@ -18,22 +18,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         addonsData = contentData.addons || {};
         menuData = {};
 
-        // Все ключи, кроме tabs — это секции меню
-        const metaKeys = ['tabs'];
-        for (const key of Object.keys(json)) {
-            if (!metaKeys.includes(key)) {
-                menuData[key] = json[key];
+        // Секции = только те ключи, что совпадают с id табов
+        menuData.tabs = json.tabs || [];
+        const tabIds = menuData.tabs.map(t => t.id);
+        for (const tabId of tabIds) {
+            if (json[tabId]) {
+                menuData[tabId] = json[tabId];
             }
         }
-        // Сохраняем мета-данные для рендера
-        menuData.tabs = json.tabs || [];
 
         // Сливаем описания и бейджи из content.json в каждый товар
         const contentItems = contentData.items || {};
         menuData.badges = contentData.badges || {};
 
         for (const sectionKey of Object.keys(menuData)) {
-            if (sectionKey === 'tabs') continue;
+            if (sectionKey === 'tabs' || sectionKey === 'badges') continue;
             const categories = menuData[sectionKey];
             if (!Array.isArray(categories)) continue;
             for (const cat of categories) {
@@ -54,12 +53,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     } catch (err) {
+        document.getElementById('menu-loading')?.classList.add('menu__loading--done');
         console.error('Не удалось загрузить данные:', err);
         document.querySelectorAll('.menu__content').forEach(el => {
             el.innerHTML = '<p style="text-align:center;padding:60px 0;color:#999;">Не удалось загрузить меню. Попробуйте обновить страницу.</p>';
         });
         return;
     }
+
+    // Скрываем skeleton-загрузку
+    document.getElementById('menu-loading')?.classList.add('menu__loading--done');
 
     // ====== МАППИНГ ИЗОБРАЖЕНИЙ (iiko не передаёт фото в JSON) ======
     const itemImages = {
@@ -171,6 +174,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         updateCartUI();
+        saveCart();
+
         // Анимация кнопки корзины
         const fab = document.getElementById('cart-fab');
         fab.classList.remove('cart-fab--bounce');
@@ -191,6 +196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function removeFromCart(id) {
         cart = cart.filter(c => c.id !== id);
         updateCartUI();
+        saveCart();
     }
 
     function updateCartQuantity(id, delta) {
@@ -201,6 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             removeFromCart(id);
         } else {
             updateCartUI();
+            saveCart();
         }
     }
 
@@ -210,6 +217,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function getCartCount() {
         return cart.reduce((sum, c) => sum + c.quantity, 0);
+    }
+
+    // ====== СОХРАНЕНИЕ КОРЗИНЫ (localStorage) ======
+    const CART_STORAGE_KEY = 'fab_menu_cart';
+
+    function saveCart() {
+        try {
+            localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+        } catch (e) {
+            // localStorage недоступен или переполнен — тихо игнорируем
+        }
+    }
+
+    function loadCart() {
+        try {
+            const saved = localStorage.getItem(CART_STORAGE_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                    cart = parsed;
+                }
+            }
+        } catch (e) {
+            // Повреждённые данные — начинаем с чистой корзины
+        }
     }
 
     // ====== UI КОРЗИНЫ ======
@@ -223,6 +255,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cartModalCheckout = document.getElementById('cart-modal-checkout');
     const checkoutName = document.getElementById('checkout-name');
     const checkoutComment = document.getElementById('checkout-comment');
+
+    // Восстанавливаем корзину из localStorage
+    loadCart();
+    updateCartUI(); // показываем бейдж / FAB, если корзина не пуста
 
     function updateCartUI() {
         const count = getCartCount();
@@ -268,6 +304,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 img.className = 'cart-item__thumb';
                 img.src = 'images/' + encodeURIComponent(ci.image);
                 img.alt = ci.name;
+                img.addEventListener('error', function() {
+                    this.outerHTML = '<div class="cart-item__thumb" style="background:#f5f5f5;border-radius:12px;"></div>';
+                });
                 row.appendChild(img);
             } else {
                 const placeholder = document.createElement('div');
@@ -387,6 +426,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         successDiv.querySelector('#order-success-close').addEventListener('click', () => {
             cart = [];
             updateCartUI();
+            saveCart();
             closeCartModal();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
@@ -472,6 +512,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 img.alt = item.name;
                 img.loading = 'lazy';
                 img.decoding = 'async';
+                img.addEventListener('error', function() {
+                    this.style.display = 'none';
+                    el.classList.remove('menu__item--has-image');
+                });
                 el.appendChild(img);
             }
 
@@ -648,6 +692,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             modalImg.src = 'images/' + encodeURIComponent(getItemImage(item.name));
             modalImg.alt = item.name;
             modalImg.style.display = 'block';
+            modalImg.addEventListener('error', function handler() {
+                this.style.display = 'none';
+                this.removeEventListener('error', handler);
+            });
         } else {
             modalImg.style.display = 'none';
         }
@@ -729,10 +777,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // ----- Количество -----
         const qtySection = document.createElement('div');
-        qtySection.className = 'modal-section';
-        qtySection.style.borderTop = '1px solid rgba(61, 22, 47, 0.08)';
-        qtySection.style.paddingTop = '20px';
-        qtySection.style.marginTop = '20px';
+        qtySection.className = 'modal-section modal-section--quantity';
 
         const qtyLabel = document.createElement('div');
         qtyLabel.className = 'modal-section__label';
@@ -838,23 +883,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const chip = document.createElement('button');
                 chip.className = 'choice-chip' + (isActive ? ' choice-chip--active' : '');
-
                 const priceLabel = price > 0 ? ' <span class="choice-chip__price">+' + price + '₽</span>' : '';
-
                 chip.innerHTML = '<span>' + def.name + '</span>' + priceLabel;
 
                 chip.addEventListener('click', () => {
-                    if (!isActive) {
+                    const wasActive = chip.classList.contains('choice-chip--active');
+                    if (wasActive) {
+                        delete selectedAddons[key];
+                        chip.classList.remove('choice-chip--active');
+                    } else {
                         selectedAddons[key] = {
                             type: key,
                             label: def.name + (price > 0 ? ' +' + price + '₽' : ''),
                             price,
                             selected: true,
                         };
-                    } else {
-                        delete selectedAddons[key];
+                        chip.classList.add('choice-chip--active');
                     }
-                    renderAddonSections();
                     updateTotals();
                 });
                 chips.appendChild(chip);
@@ -884,6 +929,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const sec = document.createElement('div');
             sec.className = 'modal-section';
+            sec.dataset.choiceKey = key;
 
             const label = document.createElement('div');
             label.className = 'modal-section__label';
@@ -900,10 +946,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const chip = document.createElement('button');
                 chip.className = 'choice-chip' + (isSelected ? ' choice-chip--active' : '');
-
                 chip.innerHTML = '<span>' + opt + '</span>' + (price > 0 ? ' <span class="choice-chip__price">+' + price + '₽</span>' : '');
 
                 chip.addEventListener('click', () => {
+                    if (def.required && isSelected) return;
                     if (isSelected) {
                         delete selectedAddons[key];
                     } else {
@@ -915,7 +961,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             selected: true,
                         };
                     }
-                    renderAddonSections();
+                    renderChoiceSection(key);
                     updateTotals();
                 });
                 chips.appendChild(chip);
@@ -923,6 +969,59 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             sec.appendChild(chips);
             container.appendChild(sec);
+        });
+    }
+
+    /** Перерисовывает только одну choice-секцию аддонов (без полного ререндера) */
+    function renderChoiceSection(key) {
+        const sec = document.querySelector(`[data-choice-key="${key}"]`);
+        if (!sec) return;
+
+        const def = addonsData[key];
+        if (!def || !Array.isArray(def.options)) return;
+
+        // Для required: восстанавливаем выбор по умолчанию, если всё снято
+        if (def.required && !selectedAddons[key]) {
+            const firstOpt = def.options[0];
+            const price = getAddonPrice(def, selectedSize?.size);
+            selectedAddons[key] = {
+                type: key,
+                option: firstOpt,
+                label: def.name + ' — ' + firstOpt,
+                price,
+                selected: true,
+            };
+        }
+
+        const chips = sec.querySelector('.choice-chips');
+        if (!chips) return;
+        chips.innerHTML = '';
+
+        def.options.forEach(opt => {
+            const price = getAddonPrice(def, selectedSize?.size);
+            const isSelected = selectedAddons[key]?.option === opt;
+
+            const chip = document.createElement('button');
+            chip.className = 'choice-chip' + (isSelected ? ' choice-chip--active' : '');
+            chip.innerHTML = '<span>' + opt + '</span>' + (price > 0 ? ' <span class="choice-chip__price">+' + price + '₽</span>' : '');
+
+            chip.addEventListener('click', () => {
+                if (def.required && isSelected) return;
+                if (isSelected) {
+                    delete selectedAddons[key];
+                } else {
+                    selectedAddons[key] = {
+                        type: key,
+                        option: opt,
+                        label: def.name + ' — ' + opt,
+                        price,
+                        selected: true,
+                    };
+                }
+                renderChoiceSection(key);
+                updateTotals();
+            });
+            chips.appendChild(chip);
         });
     }
 
