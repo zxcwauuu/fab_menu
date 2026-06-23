@@ -36,7 +36,20 @@ fab_menu/
     ├── гранат-кумкват.jpg
     ├── Щавелевый лимонад _ Sorrel lemonade.jpg
     ├── fresh.jpg
-    └── Smooth, creamy, and effortlessly classic 🤍_...название....jpg   # Коктейль
+    ├── Smooth, creamy, and effortlessly classic 🤍_...название....jpg   # Коктейль
+    ├── frantsuzskiy-zavtrak.jpg
+    ├── syrniki-so-smetanoy.jpg
+    ├── skrembl-s-lososem.jpg
+    ├── granola-s-yogurtom.jpg
+    ├── kasha-risovo-kokosovaya.jpg
+    ├── sendvich-s-kuritsey.jpg
+    ├── kruassan-s-lososem.jpg
+    ├── brusketta-s-tomatami.jpg
+    ├── tost-s-avokado.jpg
+    ├── salat-s-grushey-i-gorgonzoloy.jpg
+    ├── tsezar-s-kuritsey.jpg
+    ├── tykvennyy-sup-krem.jpg
+    └── tomatnyy-sup-s-bazilikom.jpg
 ```
 
 ---
@@ -85,6 +98,8 @@ fab_menu/
   }
 }
 ```
+
+> **Примечание:** Поле `icons` в аддонах удалено — не использовалось в UI. Иконки эмодзи не рендерятся.
 
 ### Детекция секций
 Секциями считаются только те ключи `menu.json`, которые совпадают с `id` табов. Это надёжнее, чем `filter(k => k !== 'tabs')` — любое новое мета-поле (например `settings`) не станет секцией меню.
@@ -142,8 +157,8 @@ for (const tabId of tabIds) {
 
 ### Скролл модалки
 - `.modal-card`: `max-height: 90vh; display: flex; flex-direction: column;`
-- `.modal-body`: `overflow-y: auto; flex: 1; min-height: 0;`
-- Корзина — отдельная модалка с прокруткой.
+- `.modal-body`: `overflow-y: auto; flex: 1; min-height: 0;` + `-webkit-overflow-scrolling: touch`
+- Корзина — отдельная модалка с прокруткой + `-webkit-overflow-scrolling: touch`
 
 ---
 
@@ -151,10 +166,11 @@ for (const tabId of tabIds) {
 
 1. **Sticky hover** — все `:hover` обёрнуты в `@media (hover: hover) {}`.
 2. **Tap highlight** — `-webkit-tap-highlight-color: transparent` на всех кнопках.
-3. **Active state** — свои `:active` стили (оранжевый градиент на `choice-chip`).
+3. **Active state** — свои `:active` стили (оранжевый градиент на `choice-chip`). Пустой `touchstart` listener на document форсирует `:active` на iOS.
 4. **Focus cleanup** — после touchend через setTimeout `document.activeElement?.blur()`.
-5. **Touch action** — `touch-action: manipulation` на кнопках.
+5. **Global touch-action** — `touch-action: manipulation` на `<html>` (блокировка zoom + двойного тапа).
 6. **Passive touch events** — `{passive: true}` на всех touch-обработчиках.
+7. **Выделение текста** — глобально `user-select: none`, `-webkit-touch-callout: none`.
 
 ---
 
@@ -174,13 +190,23 @@ for (const tabId of tabIds) {
 ## Особенности рендера
 
 - **Табы** — динамически из `menuData.tabs`. Содержимое переключается классом `menu__content--active`.
+- **Таб persist** — активный таб сохраняется в `localStorage` (`fab_menu_active_tab`), восстанавливается при перезагрузке.
 - **Анимация** — stagger-анимация через CSS `--i` при переключении табов.
 - **Loading skeleton** — 6 карточек с `skeletonShimmer` анимацией, показываются сразу (HTML/CSS), скрываются после загрузки данных через класс `menu__loading--done`.
 - **Карточка товара без sizes** — `currentBasePrice` вычисляется через `parseItemBasePrice(item.priceDisplay)`, которая берёт первое число из `priceDisplay`.
-- **Fallback картинок** — `onerror` на всех img: карточка меню теряет `--has-image` и показывает оранжевую плашку; модалка скрывает фото; корзина подставляет серый плейсхолдер.
-- **Модалка** — показывается только для bar-секций (товары с `sizes`). Kitchen таб не имеет кастомизации.
+- **Fallback картинок** — `onerror` на всех img: карточка меню теряет `--has-image` и показывает оранжевую плашку; модалка скрывает фото; корзина подставляет серый плейсхолдер. `encodeURIComponent` на путях не используется — файлы отдаются как есть.
+- **Модалка** — показывается для всех товаров; bar-товары (с `sizes`) получают кастомизацию, kitchen — только количество.
 - **Cacao required** — `cacao_type` обязательный choice с 2 опциями (шоколад / порошок), авто-выбирает первый, снять нельзя.
 - **Fresh required** — `fresh_flavor` обязательный choice с 5 опциями (апельсин/яблоко/морковь/яблоко-апельсин/яблоко-морковь), снять нельзя.
+
+---
+
+## Kiosk-специфика
+
+- **Idle timer** — 60 секунд без тача/клика сбрасывает корзину, закрывает модалки и возвращает на первый таб. `scroll` не сбрасывает таймер (чтение не прерывает ожидание).
+- **Блокировка зума** — `touch-action: manipulation` на `<html>`.
+- **Выделение текста** — глобально запрещено (`user-select: none`).
+- **Текстовый ввод** — поле "Имя" и "Комментарий" в корзине вызывают экранную клавиатуру. На киоске это неудобство (ожидает бэкенд для полноценного решения).
 
 ---
 
@@ -188,6 +214,8 @@ for (const tabId of tabIds) {
 
 Объект `itemImages` в `script.js` (не в JSON! iiko не отправляет фото).
 Функция `getItemImage(name)` возвращает имя файла или `''`.
+
+Пути к файлам не кодируются через `encodeURIComponent` — браузер и сервер работают с UTF-8 напрямую.
 
 <details>
 <summary>Текущий маппинг</summary>
@@ -214,12 +242,25 @@ for (const tabId of tabIds) {
 | Щавелевый | Щавелевый лимонад _ Sorrel lemonade.jpg |
 | Фреш | fresh.jpg |
 | Коктейль | Smooth, creamy, and effortlessly classic 🤍_Our Vanilla Shake...__ناع.jpg |
+| Французский Завтрак | frantsuzskiy-zavtrak.jpg |
+| Сырники со Сметаной | syrniki-so-smetanoy.jpg |
+| Скрэмбл с Лососем | skrembl-s-lososem.jpg |
+| Гранола с Йогуртом | granola-s-yogurtom.jpg |
+| Каша рисово-кокосовая | kasha-risovo-kokosovaya.jpg |
+| Сэндвич с Курицей | sendvich-s-kuritsey.jpg |
+| Круассан с Лососем | kruassan-s-lososem.jpg |
+| Брускетта с Томатами | brusketta-s-tomatami.jpg |
+| Тост с Авокадо | tost-s-avokado.jpg |
+| Салат с Грушей и Горгонзолой | salat-s-grushey-i-gorgonzoloy.jpg |
+| Цезарь с Курицей | tsezar-s-kuritsey.jpg |
+| Тыквенный Суп-Крем | tykvennyy-sup-krem.jpg |
+| Томатный Суп с Базиликом | tomatnyy-sup-s-bazilikom.jpg |
 
 </details>
 
 ---
 
-## Текущее состояние (2026-06-19)
+## Текущее состояние (2026-06-23)
 
 ### ✅ Готово
 - **Два JSON-файла** — `menu.json` (iiko) + `content.json` (редакция), мерж в JS
@@ -238,10 +279,16 @@ for (const tabId of tabIds) {
 - **Обработка битых картинок** — onerror fallback на всех изображениях
 - **Секции через tab IDs** — явное сопоставление, а не исключение ключей
 - **Логотип локально** — скачан с tildacdn, хостится в `images/logo.svg`
+- **Персистентность табов** — активный таб сохраняется в localStorage
+- **Idle timer** — 60 секунд бездействия → сброс корзины + модалок + табов
+- **Kiosk-защита** — глобальные `touch-action: manipulation`, `user-select: none`
+- **Momentum-скролл** — `-webkit-overflow-scrolling: touch` на модалках
+- **Чистота кода** — удалён мёртвый код (renderIcon, currentCategory, multiple dead CSS, `.modal-sizes` в HTML, badge modifier класс в JS)
+- **Кухонные фото** — все изображения добавлены в маппинг
 
 ### 🚫 Осознанные ограничения/решения
 - **iiko генерирует только menu.json** — изображения в JS-маппинге, описания и конфигурация аддонов в content.json
-- **Kitchen не имеет модалки** — открывается модалка без кастомизации (название + количество)
+- **Поле "Имя" при оформлении** — требует текстового ввода (плохо для киоска). Будет заменено на кнопки или QR при появлении бэкенда.
 - **"Оформить заказ"** пока просто очищает корзину (нет отправки)
 - **Нет Service Worker** — при падении сервера меню недоступно
 - **Нет полноценной a11y** — минимальные aria-атрибуты

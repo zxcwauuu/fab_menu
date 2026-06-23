@@ -41,7 +41,17 @@
       "WebFetch(domain:localhost)",
       "Bash(node -e \"try { require\\('fs'\\).readFileSync\\('script.js','utf8'\\); } catch\\(e\\){}; const acorn = require\\('acorn'\\);\")",
       "Bash(node -e ' *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(uv --version)",
+      "Read(//tmp/**)",
+      "Bash(uvx --help)",
+      "Bash(git checkout *)",
+      "Bash(awk '{print $NF, $5}')",
+      "mcp__codebase-memory-mcp__list_projects",
+      "Bash(cp *)",
+      "Skill(simplify)",
+      "mcp__codebase-memory-mcp__index_status",
+      "mcp__codebase-memory-mcp__search_graph"
     ]
   }
 }

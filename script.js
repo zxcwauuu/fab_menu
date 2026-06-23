@@ -86,6 +86,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         "Щавелевый": "Щавелевый лимонад _ Sorrel lemonade.jpg",
         "Фреш": "fresh.jpg",
         "Коктейль": "Smooth, creamy, and effortlessly classic 🤍_Our Vanilla Shake is pure indulgence, made simple___Rich vanilla, velvety texture, and a touch of sweetness in every sip…_because sometimes, classic is everything.__ناع.jpg",
+
+        // Кухня
+        "Французский Завтрак": "frantsuzskiy-zavtrak.jpg",
+        "Сырники со Сметаной": "syrniki-so-smetanoy.jpg",
+        "Скрэмбл с Лососем": "skrembl-s-lososem.jpg",
+        "Гранола с Йогуртом": "granola-s-yogurtom.jpg",
+        "Каша рисово-кокосовая": "kasha-risovo-kokosovaya.jpg",
+        "Сэндвич с Курицей": "sendvich-s-kuritsey.jpg",
+        "Круассан с Лососем": "kruassan-s-lososem.jpg",
+        "Брускетта с Томатами": "brusketta-s-tomatami.jpg",
+        "Тост с Авокадо": "tost-s-avokado.jpg",
+        "Салат с Грушей и Горгонзолой": "salat-s-grushey-i-gorgonzoloy.jpg",
+        "Цезарь с Курицей": "tsezar-s-kuritsey.jpg",
+        "Тыквенный Суп-Крем": "tykvennyy-sup-krem.jpg",
+        "Томатный Суп с Базиликом": "tomatnyy-sup-s-bazilikom.jpg",
     };
 
     function getItemImage(itemName) {
@@ -108,13 +123,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // ====== ХЕЛПЕРЫ ======
-    // Рендерит иконку из JSON (emoji или SVG)
-    function renderIcon(icon) {
-        if (!icon) return '';
-        if (typeof icon === 'string' && icon.startsWith('<svg')) return icon;
-        return '<span class="emoji-icon">' + icon + '</span>';
-    }
-
     function parseSizes(sizes) {
         if (!sizes) return [];
         return sizes.map(s => {
@@ -220,6 +228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ====== СОХРАНЕНИЕ КОРЗИНЫ (localStorage) ======
+    const TAB_STORAGE_KEY = 'fab_menu_active_tab';
     const CART_STORAGE_KEY = 'fab_menu_cart';
 
     function saveCart() {
@@ -302,7 +311,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (ci.image) {
                 const img = document.createElement('img');
                 img.className = 'cart-item__thumb';
-                img.src = 'images/' + encodeURIComponent(ci.image);
+                img.src = 'images/' + ci.image;
                 img.alt = ci.name;
                 img.addEventListener('error', function() {
                     this.outerHTML = '<div class="cart-item__thumb" style="background:#f5f5f5;border-radius:12px;"></div>';
@@ -388,7 +397,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!name) {
             checkoutName.classList.add('checkout-input--error');
             errEl.style.display = 'block';
-            checkoutName.focus();
             return;
         }
         checkoutName.classList.remove('checkout-input--error');
@@ -451,8 +459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (existingSuccess) existingSuccess.remove();
     }
 
-    // Единый обработчик Escape
-    // Фикс для iOS — убирает залипание focus/active состояния после тапа
+    // Фикс для iOS — включает :active на тач-устройствах и убирает залипание focus
     document.addEventListener('touchstart', function(){}, {passive: true});
     document.addEventListener('touchend', function(e) {
         if (e.target.closest('button')) {
@@ -460,6 +467,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }, {passive: true});
 
+    // Обработчик Escape (для отладки, если вдруг подключена клавиатура)
     const keyHandler = e => {
         if (e.key === 'Escape') {
             if (modal.classList.contains('modal-overlay--open')) {
@@ -469,7 +477,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     };
-    document.removeEventListener('keydown', keyHandler);
     document.addEventListener('keydown', keyHandler);
 
     // ====== РЕНДЕР МЕНЮ ======
@@ -495,7 +502,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return wrapper;
         }
 
-        cat.items.forEach((item, idx) => {
+        cat.items.forEach(item => {
             const el = document.createElement('div');
             const hasImage = !!getItemImage(item.name);
 
@@ -508,7 +515,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (hasImage) {
                 const img = document.createElement('img');
                 img.className = 'menu__item-thumb';
-                img.src = 'images/' + encodeURIComponent(getItemImage(item.name));
+                img.src = 'images/' + getItemImage(item.name);
                 img.alt = item.name;
                 img.loading = 'lazy';
                 img.decoding = 'async';
@@ -530,7 +537,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (item.badge && menuData.badges && menuData.badges[item.badge]) {
                 const badgeDef = menuData.badges[item.badge];
                 const badge = document.createElement('span');
-                badge.className = 'menu__item-badge menu__item-badge--' + item.badge;
+                badge.className = 'menu__item-badge';
                 badge.textContent = badgeDef.text;
                 nameEl.appendChild(badge);
             }
@@ -548,7 +555,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             grid.appendChild(el);
 
             // Клик — открыть модалку кастомизации
-            el.addEventListener('click', () => openItemModal(item, cat.title));
+            el.addEventListener('click', () => openItemModal(item));
         });
 
         return wrapper;
@@ -575,17 +582,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Создаём контейнеры контента и кнопки табов
     const tabButtons = [];
     const contents = {};
+    // Определяем активный таб по умолчанию (из localStorage или первый)
     let firstTabId = null;
+    const savedTabId = (() => { try { return localStorage.getItem(TAB_STORAGE_KEY); } catch(e) { return null; } })();
 
     menuData.tabs.forEach(tabDef => {
         const id = tabDef.id;
         if (!firstTabId) firstTabId = id;
 
+        const activeTab = savedTabId && menuData.tabs.some(t => t.id === savedTabId) ? savedTabId : firstTabId;
+
         // Кнопка таба
         const btn = document.createElement('button');
-        btn.className = 'menu__tab' + (id === firstTabId ? ' menu__tab--active' : '');
+        btn.className = 'menu__tab' + (id === activeTab ? ' menu__tab--active' : '');
         btn.dataset.tab = id;
-        btn.setAttribute('aria-pressed', id === firstTabId ? 'true' : 'false');
+        btn.setAttribute('aria-pressed', id === activeTab ? 'true' : 'false');
         btn.innerHTML = '<span class="menu__tab-icon">' + tabDef.icon + '</span>' + tabDef.title;
         tabsContainer.appendChild(btn);
         tabButtons.push(btn);
@@ -594,11 +605,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         let contentEl = document.getElementById('tab-' + id);
         if (!contentEl) {
             contentEl = document.createElement('div');
-            contentEl.className = 'menu__content' + (id === firstTabId ? ' menu__content--active' : '');
+            contentEl.className = 'menu__content' + (id === activeTab ? ' menu__content--active' : '');
             contentEl.id = 'tab-' + id;
             menuSection.appendChild(contentEl);
         } else {
-            contentEl.classList.toggle('menu__content--active', id === firstTabId);
+            contentEl.classList.toggle('menu__content--active', id === activeTab);
         }
         contents[id] = contentEl;
     });
@@ -628,10 +639,60 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (contents[key]) contents[key].classList.toggle('menu__content--active', key === target);
             });
             animateItems(contents[target]);
+            // Сохраняем активный таб
+            try { localStorage.setItem(TAB_STORAGE_KEY, target); } catch(e) {}
         });
     });
 
-    if (firstTabId && contents[firstTabId]) animateItems(contents[firstTabId]);
+    const initialActiveTab = savedTabId && contents[savedTabId] ? savedTabId : firstTabId;
+    if (initialActiveTab && contents[initialActiveTab]) animateItems(contents[initialActiveTab]);
+
+    // ====== IDLE TIMER (автосброс для киоска — 60 сек бездействия) ======
+    const IDLE_TIMEOUT = 60000;
+    let idleTimer = null;
+
+    function resetIdleTimer() {
+        if (idleTimer) clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => {
+            // Закрыть модалки, если открыты
+            if (modal.classList.contains('modal-overlay--open')) closeModal();
+            if (cartModal.classList.contains('modal-overlay--open')) closeCartModal();
+
+            // Сброс на первый таб
+            const firstTab = menuData.tabs[0];
+            if (firstTab && tabButtons.length > 0) {
+                tabButtons.forEach(t => {
+                    t.classList.remove('menu__tab--active');
+                    t.setAttribute('aria-pressed', 'false');
+                });
+                const firstBtn = tabButtons.find(t => t.dataset.tab === firstTab.id);
+                if (firstBtn) {
+                    firstBtn.classList.add('menu__tab--active');
+                    firstBtn.setAttribute('aria-pressed', 'true');
+                }
+                Object.keys(contents).forEach(key => {
+                    if (contents[key]) {
+                        contents[key].classList.toggle('menu__content--active', key === firstTab.id);
+                    }
+                });
+                animateItems(contents[firstTab.id]);
+            }
+
+            // Очистить корзину
+            cart = [];
+            saveCart();
+            updateCartUI();
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, IDLE_TIMEOUT);
+    }
+
+    // Только реальное взаимодействие — тач/клик, без scroll (чтение не сбивает таймер)
+    document.addEventListener('click', resetIdleTimer, { passive: true });
+    document.addEventListener('touchstart', resetIdleTimer, { passive: true });
+
+    // Стартуем таймер сразу после загрузки
+    resetIdleTimer();
 
     // ====== МОДАЛКА КАСТОМИЗАЦИИ ======
     const modal = document.getElementById('item-modal');
@@ -640,7 +701,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const modalClose = modal.querySelector('.modal-close');
 
     let currentItem = null;
-    let currentCategory = '';
     let selectedSize = null;
     let selectedAddons = {};
     let itemQuantity = 1;
@@ -651,7 +711,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function resetModalState() {
         currentItem = null;
-        currentCategory = '';
         selectedSize = null;
         selectedAddons = {};
         itemQuantity = 1;
@@ -659,10 +718,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentBasePrice = 0;
     }
 
-    function openItemModal(item, category) {
+    function openItemModal(item) {
         resetModalState();
         currentItem = item;
-        currentCategory = category;
         availableSizes = parseSizes(item.sizes || []);
         selectedSize = availableSizes.length > 0 ? availableSizes[0] : null;
         currentBasePrice = availableSizes.length > 0
@@ -689,7 +747,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Изображение
         if (getItemImage(item.name)) {
-            modalImg.src = 'images/' + encodeURIComponent(getItemImage(item.name));
+            modalImg.src = 'images/' + getItemImage(item.name);
             modalImg.alt = item.name;
             modalImg.style.display = 'block';
             modalImg.addEventListener('error', function handler() {
@@ -777,7 +835,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // ----- Количество -----
         const qtySection = document.createElement('div');
-        qtySection.className = 'modal-section modal-section--quantity';
+        qtySection.className = 'modal-section';
 
         const qtyLabel = document.createElement('div');
         qtyLabel.className = 'modal-section__label';
@@ -830,8 +888,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         addBtn.className = 'add-to-cart';
         addBtn.id = 'modal-add-btn';
 
-        const totalSpan = document.createElement('span');
-        totalSpan.id = 'modal-total-display';
         addBtn.innerHTML = '<span>Добавить в корзину</span> <span class="add-to-cart__price" id="modal-total-price">' + formatPrice(calcTotal()) + '</span>';
         addBtn.addEventListener('click', () => {
             const addonsList = Object.values(selectedAddons).filter(a => a.selected);
