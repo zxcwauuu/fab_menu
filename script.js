@@ -548,7 +548,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const price = document.createElement('span');
             price.className = 'menu__item-price';
-            price.textContent = item.priceDisplay;
+            // "от" для позиций с размерами (цена зависит от объёма/аддонов)
+            if (item.sizes && item.sizes.length > 0) {
+                const parsed = parseSizes(item.sizes);
+                const minPrice = Math.min(...parsed.map(p => p.price));
+                price.textContent = 'от ' + formatPrice(minPrice);
+            } else {
+                price.textContent = item.priceDisplay || '';
+            }
 
             info.append(nameEl, desc, price);
             el.appendChild(info);
@@ -1104,5 +1111,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     modal.addEventListener('click', e => {
         if (e.target === modal) closeModal();
+    });
+
+    // ====== ЛОГОТИП — сброс и скролл наверх (вместо перехода по ссылке) ======
+    document.querySelector('.header__logo')?.addEventListener('click', e => {
+        e.preventDefault();
+
+        // Закрываем модалки
+        if (modal.classList.contains('modal-overlay--open')) closeModal();
+        if (cartModal.classList.contains('modal-overlay--open')) closeCartModal();
+
+        // Сброс на первый таб
+        const firstTab = menuData.tabs[0];
+        if (firstTab && tabButtons.length > 0) {
+            tabButtons.forEach(t => {
+                t.classList.remove('menu__tab--active');
+                t.setAttribute('aria-pressed', 'false');
+            });
+            const firstBtn = tabButtons.find(t => t.dataset.tab === firstTab.id);
+            if (firstBtn) {
+                firstBtn.classList.add('menu__tab--active');
+                firstBtn.setAttribute('aria-pressed', 'true');
+            }
+            Object.keys(contents).forEach(key => {
+                if (contents[key]) {
+                    contents[key].classList.toggle('menu__content--active', key === firstTab.id);
+                }
+            });
+            if (contents[firstTab.id]) animateItems(contents[firstTab.id]);
+        }
+
+        // Скролл на самый верх
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 });
